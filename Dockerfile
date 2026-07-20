@@ -21,9 +21,6 @@ WORKDIR /app
 # Copy application files
 COPY . /app
 
-# Sanitize line endings and make entrypoint executable
-RUN tr -d '\r' < docker-entrypoint.sh > /entrypoint.sh && chmod +x /entrypoint.sh
-
 # Ensure .env file exists in container image
 RUN cp -n .env.example .env
 
@@ -38,8 +35,8 @@ RUN chmod -R 777 storage bootstrap/cache
 # Build frontend assets
 RUN npm install && npm run build
 
-# Expose port
+# Expose default port
 EXPOSE 8080
 
-# Persistent PID 1 ENTRYPOINT
-ENTRYPOINT ["/entrypoint.sh"]
+# Clean direct shell CMD web server for Railway
+CMD php -S 0.0.0.0:${PORT:-8080} -t public

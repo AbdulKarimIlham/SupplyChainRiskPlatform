@@ -38,5 +38,5 @@ RUN npm install && npm run build
 # Expose port
 EXPOSE 8080
 
-# Clean shell CMD start command for Railway
-CMD php artisan serve --host 0.0.0.0 --port $PORT
+# Clean start command for Railway
+CMD ["sh", "-c", "php artisan config:clear || true; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]

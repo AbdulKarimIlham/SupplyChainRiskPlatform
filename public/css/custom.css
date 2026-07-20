@@ -1,0 +1,7 @@
+/* public/css/custom.css */
+body { font-family:'Inter',sans-serif; background:#1e1e2f; color:#fff; }
+.card-kpi { border-radius:12px; padding:20px; margin-bottom:20px; min-height:120px; display:flex; flex-direction:column; justify-content:center; }
+.card-kpi::before { content: ''; width: 40px; height: 40px; border-radius:50%; background-color: #4b5eeb; margin-bottom: 10px; }
+.sidebar a.active { background-color:#4b5eeb; border-radius:6px; color:#fff; }
+.menu-section { display:none; }
+.menu-section.active { display:block; }

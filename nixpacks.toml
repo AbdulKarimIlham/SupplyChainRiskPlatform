@@ -8,8 +8,9 @@ nixPkgs = ['php82', 'php82Packages.composer', 'nodejs_20']
 cmds = [
   'composer install --optimize-autoloader --no-dev',
   'npm install',
-  'npm run build'
+  'npm run build',
+  'chmod -R 777 storage bootstrap/cache'
 ]
 
 [start]
-cmd = "sh -c 'php -S 0.0.0.0:${PORT:-8080} -t public'"
+cmd = "chmod -R 777 storage bootstrap/cache && php -S 0.0.0.0:$PORT -t public"

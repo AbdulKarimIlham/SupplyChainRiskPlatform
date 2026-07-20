@@ -1,1 +1,1 @@
-web: sh -c "php -S 0.0.0.0:${PORT:-8080} -t public"
+web: chmod -R 777 storage bootstrap/cache && php -S 0.0.0.0:$PORT -t public

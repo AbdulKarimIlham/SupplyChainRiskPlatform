@@ -1,1 +1,1 @@
-web: chmod -R 777 storage bootstrap/cache && php -S 0.0.0.0:$PORT -t public
+web: php artisan serve --host=0.0.0.0 --port=$PORT

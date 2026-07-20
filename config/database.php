@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => (env('MYSQLHOST') || env('MYSQL_HOST') || (env('DB_HOST') && env('DB_HOST') !== '127.0.0.1' && env('DB_HOST') !== 'localhost' && !str_contains(env('DB_HOST', ''), '${{'))) ? env('DB_CONNECTION', 'mysql') : 'sqlite',
 
     /*
     |--------------------------------------------------------------------------

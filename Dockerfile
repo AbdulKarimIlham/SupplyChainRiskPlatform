@@ -21,8 +21,9 @@ WORKDIR /app
 # Copy application files
 COPY . /app
 
-# Ensure .env file exists in container image
+# Ensure .env file and sqlite database exist
 RUN cp -n .env.example .env
+RUN touch /app/database/database.sqlite && chmod 777 /app/database/database.sqlite
 
 # Install Composer dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \

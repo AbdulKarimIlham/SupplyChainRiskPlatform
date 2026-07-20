@@ -5,6 +5,9 @@ ENV WEBROOT="/var/www/html/public"
 ENV PHP_ERRORS_STDERR="1"
 ENV ERRORS="1"
 
+# Install Node.js and NPM for asset compilation
+RUN apk add --no-cache nodejs npm
+
 # Copy application code into container webroot
 COPY . /var/www/html
 
@@ -20,5 +23,5 @@ RUN composer install --optimize-autoloader --no-dev
 # Generate Laravel APP_KEY
 RUN php artisan key:generate
 
-# Install Node & Build assets
+# Install Node dependencies & Build frontend assets
 RUN npm install && npm run build

@@ -1,42 +1,24 @@
-FROM php:8.2-cli
+FROM richarvey/nginx-php-fpm:latest
 
-# Install system dependencies and PHP extensions required by Laravel & MySQL
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Configure Nginx web root for Laravel public directory
+ENV WEBROOT="/var/www/html/public"
+ENV PHP_ERRORS_STDERR="1"
+ENV ERRORS="1"
 
-# Install Node.js for asset bundling
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+# Copy application code into container webroot
+COPY . /var/www/html
 
-# Set working directory
-WORKDIR /app
+# Set full read/write permissions for Laravel storage & bootstrap cache
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy application files
-COPY . /app
-
-# Ensure .env file exists in container image
-RUN cp -n .env.example .env
+# Ensure .env file exists
+RUN cp -n /var/www/html/.env.example /var/www/html/.env
 
 # Install Composer dependencies
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader --no-dev
 
-# Generate key & set permissions for storage and bootstrap cache
+# Generate Laravel APP_KEY
 RUN php artisan key:generate
-RUN chmod -R 777 storage bootstrap/cache
 
-# Build frontend assets
+# Install Node & Build assets
 RUN npm install && npm run build
-
-# Expose port
-EXPOSE 8080
-
-# Direct persistent PHP web server execution via server.php router
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} server.php"]

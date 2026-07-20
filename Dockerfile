@@ -21,11 +21,15 @@ WORKDIR /app
 # Copy application files
 COPY . /app
 
+# Ensure .env file exists in container image
+RUN cp -n .env.example .env
+
 # Install Composer dependencies
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer install --optimize-autoloader --no-dev
 
-# Set permissions for storage and bootstrap cache
+# Generate key & set permissions for storage and bootstrap cache
+RUN php artisan key:generate
 RUN chmod -R 777 storage bootstrap/cache
 
 # Build frontend assets
@@ -34,5 +38,5 @@ RUN npm install && npm run build
 # Expose port
 EXPOSE 8080
 
-# Start command: copy env fallback, run migrations, and serve Laravel on $PORT
-CMD ["sh", "-c", "cp -n .env.example .env || true; php artisan config:clear || true; php artisan migrate --force || true; php artisan db:seed --force || true; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Clean shell CMD start command for Railway
+CMD php artisan serve --host 0.0.0.0 --port $PORT

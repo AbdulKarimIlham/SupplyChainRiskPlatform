@@ -21,6 +21,9 @@ WORKDIR /app
 # Copy application files
 COPY . /app
 
+# Sanitize line endings and make entrypoint executable
+RUN tr -d '\r' < docker-entrypoint.sh > /entrypoint.sh && chmod +x /entrypoint.sh
+
 # Ensure .env file exists in container image
 RUN cp -n .env.example .env
 
@@ -38,5 +41,5 @@ RUN npm install && npm run build
 # Expose port
 EXPOSE 8080
 
-# Clean start command for Railway binding directly to $PORT
-CMD ["sh", "-c", "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Persistent PID 1 ENTRYPOINT
+ENTRYPOINT ["/entrypoint.sh"]

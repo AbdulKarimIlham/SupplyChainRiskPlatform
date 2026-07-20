@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Install Node.js for asset bundling if needed
+# Install Node.js for asset bundling
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
@@ -34,5 +34,5 @@ RUN npm install && npm run build
 # Expose port
 EXPOSE 8080
 
-# Start command: run migrations/seeding gracefully and serve Laravel on $PORT
-CMD ["sh", "-c", "php artisan config:clear && php artisan migrate --force || true && php artisan db:seed --force || true && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
+# Start command: copy env fallback, run migrations, and serve Laravel on $PORT
+CMD ["sh", "-c", "cp -n .env.example .env || true; php artisan config:clear || true; php artisan migrate --force || true; php artisan db:seed --force || true; php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]

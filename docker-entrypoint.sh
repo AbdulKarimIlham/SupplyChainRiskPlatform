@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Remove cached bootstrap files
+rm -f bootstrap/cache/*.php
+
 # Ensure APP_KEY exists
 if [ -z "$APP_KEY" ]; then
     echo "Generating APP_KEY..."
@@ -11,13 +14,13 @@ php artisan config:clear || true
 php artisan route:clear || true
 php artisan view:clear || true
 
-# Wait for database connection if DB_HOST is configured
+# Wait for database connection if configured
 TARGET_HOST=${DB_HOST:-${MYSQLHOST:-127.0.0.1}}
 TARGET_PORT=${DB_PORT:-${MYSQLPORT:-3306}}
 
 echo "Checking MySQL connection at $TARGET_HOST:$TARGET_PORT..."
 
-for i in $(seq 1 15); do
+for i in $(seq 1 10); do
     php -r "
     try {
         \$host = getenv('DB_HOST') ?: (getenv('MYSQLHOST') ?: '127.0.0.1');
@@ -32,7 +35,7 @@ for i in $(seq 1 15); do
     }
     " && break
 
-    echo "MySQL connection pending ($i/15), waiting 2 seconds..."
+    echo "MySQL connection pending ($i/10), waiting 2 seconds..."
     sleep 2
 done
 

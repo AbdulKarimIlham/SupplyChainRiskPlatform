@@ -1,10 +1,6 @@
 [providers]
 providers = ['php', 'node']
 
-[variables]
-APP_URL = 'http://localhost'
-APP_KEY = 'base64:sxShQ7aMj5IxdBkPuF7OYU7kwe2XFqIoAyz5eo7f6ko='
-
 [phases.setup]
 nixPkgs = [
   'php82',
@@ -24,6 +20,7 @@ cmds = [
   'npm run build',
   'chmod -R 777 storage bootstrap/cache'
 ]
+onlyIncludeCommands = true
 
 [start]
-cmd = 'php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT'
+cmd = 'php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT'

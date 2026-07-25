@@ -2,7 +2,7 @@
     <h4 class="fw-bold text-white mb-1">Buat Akun Baru</h4>
     <p class="text-muted small mb-4">Daftar untuk mengakses platform pemantauan risiko rantai pasok</p>
 
-    <form method="POST" action="{{ route('register') }}">
+    <form method="POST" action="{{ secure_url('/register') }}">
         @csrf
 
         <!-- Name -->

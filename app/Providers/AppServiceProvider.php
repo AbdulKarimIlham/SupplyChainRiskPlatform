@@ -20,8 +20,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if ($this->app->environment('production') || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) || isset($_SERVER['HTTP_X_RAILWAY_EDGE'])) {
-            URL::forceScheme('https');
-        }
+        URL::forceScheme('https');
     }
 }

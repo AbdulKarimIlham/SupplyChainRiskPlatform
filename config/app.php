@@ -53,11 +53,20 @@ return [
     */
 
     'url' => (function() {
-        $url = env('APP_URL', 'http://localhost');
-        if (str_contains($url, '${{') || !filter_var($url, FILTER_VALIDATE_URL)) {
-            return 'http://localhost';
+        $url = env('APP_URL');
+        if ($url && !str_contains($url, '${{') && filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
         }
-        return $url;
+        if (env('RAILWAY_PUBLIC_DOMAIN')) {
+            return 'https://' . env('RAILWAY_PUBLIC_DOMAIN');
+        }
+        if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+            return 'https://' . $_SERVER['HTTP_X_FORWARDED_HOST'];
+        }
+        if (isset($_SERVER['HTTP_HOST'])) {
+            return 'https://' . $_SERVER['HTTP_HOST'];
+        }
+        return 'https://supplychainriskplatform-production.up.railway.app';
     })(),
 
     /*

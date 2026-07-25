@@ -49,10 +49,17 @@ return [
             'url' => env('DB_URL') ?: env('MYSQL_URL'),
             'host' => (function() {
                 $dbHost = env('DB_HOST');
+                $mysqlHost = env('MYSQLHOST') ?: env('MYSQL_HOST');
                 if ($dbHost && $dbHost !== '127.0.0.1' && $dbHost !== 'localhost') {
                     return $dbHost;
                 }
-                return env('MYSQLHOST') ?: ($dbHost ?: '127.0.0.1');
+                if ($mysqlHost) {
+                    return $mysqlHost;
+                }
+                if (env('RAILWAY_PUBLIC_DOMAIN') || env('RAILWAY_STATIC_URL') || getenv('RAILWAY_ENVIRONMENT') || isset($_SERVER['HTTP_X_RAILWAY_EDGE'])) {
+                    return 'mysql.railway.internal';
+                }
+                return '127.0.0.1';
             })(),
             'port' => (function() {
                 $dbPort = env('DB_PORT');

@@ -65,9 +65,15 @@ return [
                 $dbPort = env('DB_PORT');
                 return ($dbPort && $dbPort !== '3306') ? $dbPort : (env('MYSQLPORT') ?: ($dbPort ?: '3306'));
             })(),
-            'database' => env('DB_DATABASE') ?: (env('MYSQLDATABASE') ?: 'supply_chain_risk'),
-            'username' => env('DB_USERNAME') ?: (env('MYSQLUSER') ?: 'root'),
-            'password' => env('DB_PASSWORD') !== null && env('DB_PASSWORD') !== '' ? env('DB_PASSWORD') : env('MYSQLPASSWORD', ''),
+            'database' => env('DB_DATABASE') ?: (env('MYSQLDATABASE') ?: (env('MYSQL_DATABASE') ?: 'supply_chain_risk')),
+            'username' => env('DB_USERNAME') ?: (env('MYSQLUSER') ?: (env('MYSQL_USER') ?: 'root')),
+            'password' => (function() {
+                $pass = env('DB_PASSWORD');
+                if ($pass !== null && $pass !== '') {
+                    return $pass;
+                }
+                return env('MYSQLPASSWORD') ?: (env('MYSQL_PASSWORD') ?: '');
+            })(),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),

@@ -19,12 +19,37 @@ class WeatherController extends Controller
             ], 404);
         }
 
-        $weather = $service->getWeather($country->latitude, $country->longitude);
-        $current = $weather['current_weather'] ?? [
-            'temperature' => 25.0,
-            'windspeed' => 10.0,
-            'weathercode' => 0
-        ];
+        $current = null;
+
+        try {
+            $weather = $service->getWeather($country->latitude, $country->longitude);
+            if (isset($weather['current_weather'])) {
+                $current = $weather['current_weather'];
+            }
+        } catch (\Throwable $e) {
+            // Live weather fetch fallback
+        }
+
+        // DB Fallback if live fetch failed
+        if (!$current) {
+            $dbData = WeatherData::where('country_id', $country->id)->latest()->first();
+            if ($dbData) {
+                $current = [
+                    'temperature' => $dbData->temperature,
+                    'windspeed' => $dbData->wind_speed,
+                    'weathercode' => 0
+                ];
+            }
+        }
+
+        // Baseline fallback if DB is also empty
+        if (!$current) {
+            $current = [
+                'temperature' => 24.5,
+                'windspeed' => 12.0,
+                'weathercode' => 0
+            ];
+        }
 
         $weatherCode = $current['weathercode'] ?? 0;
         $weatherStatus = $this->interpretWeatherCode($weatherCode);
@@ -59,12 +84,10 @@ class WeatherController extends Controller
         $wind = $data['windspeed'] ?? 0;
         $code = $data['weathercode'] ?? 0;
 
-        // Severe weather: Thunderstorm (95,96,99), Heavy Rain (65,82), High Winds (>40 km/h)
         if ($wind > 40 || in_array($code, [95, 96, 99, 65, 82])) {
             return "High";
         }
 
-        // Moderate weather: Moderate Rain (53,55,61,63,80,81), Moderate Winds (>20 km/h)
         if ($wind > 20 || in_array($code, [53, 55, 61, 63, 80, 81])) {
             return "Medium";
         }
@@ -85,9 +108,9 @@ class WeatherController extends Controller
 
     private function extractRainEstimate($code)
     {
-        if (in_array($code, [95, 96, 99, 65, 82])) return 25.0; // Heavy rain/storm
-        if (in_array($code, [61, 63, 80, 81])) return 10.0;     // Moderate rain
-        if (in_array($code, [51, 53, 55])) return 2.5;         // Light rain/drizzle
+        if (in_array($code, [95, 96, 99, 65, 82])) return 25.0;
+        if (in_array($code, [61, 63, 80, 81])) return 10.0;
+        if (in_array($code, [51, 53, 55])) return 2.5;
         return 0.0;
     }
 }

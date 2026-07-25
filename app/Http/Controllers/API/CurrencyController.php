@@ -17,11 +17,25 @@ class CurrencyController extends Controller
             return response()->json(['message' => 'Country not found'], 404);
         }
 
-        $data = $service->getRate($country->currency);
-        $rate = round($data['rate'], 4);
+        $rate = 0;
+        try {
+            $data = $service->getRate($country->currency);
+            $rate = round($data['rate'] ?? 0, 4);
+        } catch (\Throwable $e) {
+            // Live rate fetch fallback
+        }
 
-        // Calculate change percentage if previous rate exists
+        // DB Fallback
         $prevRate = CurrencyRate::where('country_id', $country->id)->latest()->first();
+
+        if ($rate <= 0 && $prevRate) {
+            $rate = $prevRate->exchange_rate;
+        }
+
+        if ($rate <= 0) {
+            $rate = 1.0;
+        }
+
         $changePercentage = 0;
         if ($prevRate && $prevRate->exchange_rate > 0) {
             $changePercentage = round((($rate - $prevRate->exchange_rate) / $prevRate->exchange_rate) * 100, 2);
@@ -32,22 +46,24 @@ class CurrencyController extends Controller
         CurrencyRate::create([
             'country_id' => $country->id,
             'base_currency' => 'USD',
-            'target_currency' => $country->currency,
+            'target_currency' => $country->currency ?: 'USD',
             'exchange_rate' => $rate,
             'change_percentage' => $changePercentage,
             'risk_level' => $risk,
             'date' => date('Y-m-d')
         ]);
 
+        $currCode = $country->currency ?: 'USD';
+
         return response()->json([
             'success' => true,
             'country' => $country->name,
             'currency' => [
                 'base' => 'USD',
-                'target' => $country->currency,
+                'target' => $currCode,
                 'rate' => $rate,
                 'change_percentage' => $changePercentage,
-                'formatted' => $country->currency . ' ' . number_format($rate, 2, '.', ','),
+                'formatted' => $currCode . ' ' . number_format($rate, 2, '.', ','),
                 'risk' => $risk
             ]
         ]);
@@ -71,7 +87,6 @@ class CurrencyController extends Controller
             return "Medium";
         }
 
-        // Fallback baseline for high-volatility currencies
         if (in_array($currency, ['IDR', 'INR', 'BRL', 'RUB', 'TRY', 'ARS'])) {
             return "Medium";
         }

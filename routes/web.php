@@ -11,7 +11,7 @@ function ensureDatabaseInitialized() {
         if (!Schema::hasTable('countries')) {
             Artisan::call('migrate', ['--force' => true]);
         }
-        if (Schema::hasTable('countries') && \App\Models\Country::count() === 0) {
+        if (Schema::hasTable('countries') && \App\Models\Country::count() < 100) {
             Artisan::call('db:seed', ['--force' => true]);
         }
     } catch (\Throwable $e) {
@@ -37,8 +37,10 @@ Route::get('/setup-db', function () {
         return response()->json([
             'success' => true,
             'message' => 'Database migration and seeding completed successfully!',
-            'countries' => \App\Models\Country::count(),
-            'risk_scores' => \App\Models\RiskScore::count()
+            'countries_count' => \App\Models\Country::count(),
+            'risk_scores_count' => \App\Models\RiskScore::count(),
+            'weather_records' => \App\Models\WeatherData::count(),
+            'economic_records' => \App\Models\EconomicData::count()
         ]);
     } catch (\Throwable $e) {
         return response()->json([

@@ -856,28 +856,33 @@
             try {
                 const res = await fetch('/api/countries');
                 const countries = await res.json();
-                if (Array.isArray(countries) && countries.length > 0) {
+                const dataArr = Array.isArray(countries) ? countries : (countries.data || []);
+                if (Array.isArray(dataArr) && dataArr.length > 0) {
                     const globalSelect = document.getElementById('global-country-select');
                     const compC1 = document.getElementById('compare-c1');
                     const compC2 = document.getElementById('compare-c2');
 
                     let opts = '';
-                    countries.forEach(c => {
+                    dataArr.forEach(c => {
                         opts += `<option value="${c.code}">${c.name} (${c.code})</option>`;
                     });
 
                     if (globalSelect) {
                         const val = globalSelect.value;
                         globalSelect.innerHTML = opts;
-                        if ([...globalSelect.options].some(o => o.value === val)) globalSelect.value = val;
+                        if ([...globalSelect.options].some(o => o.value === val)) {
+                            globalSelect.value = val;
+                        } else {
+                            globalSelect.value = dataArr[0].code;
+                        }
                     }
                     if (compC1) {
                         compC1.innerHTML = opts;
-                        compC1.value = countries[0].code;
+                        compC1.value = dataArr[0].code;
                     }
                     if (compC2) {
                         compC2.innerHTML = opts;
-                        if (countries.length > 1) compC2.value = countries[1].code;
+                        if (dataArr.length > 1) compC2.value = dataArr[1].code;
                     }
                 }
             } catch (err) {

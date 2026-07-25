@@ -47,8 +47,17 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL') ?: env('MYSQL_URL'),
-            'host' => env('DB_HOST') ?: (env('MYSQLHOST') ?: '127.0.0.1'),
-            'port' => env('DB_PORT') ?: (env('MYSQLPORT') ?: '3306'),
+            'host' => (function() {
+                $dbHost = env('DB_HOST');
+                if ($dbHost && $dbHost !== '127.0.0.1' && $dbHost !== 'localhost') {
+                    return $dbHost;
+                }
+                return env('MYSQLHOST') ?: ($dbHost ?: '127.0.0.1');
+            })(),
+            'port' => (function() {
+                $dbPort = env('DB_PORT');
+                return ($dbPort && $dbPort !== '3306') ? $dbPort : (env('MYSQLPORT') ?: ($dbPort ?: '3306'));
+            })(),
             'database' => env('DB_DATABASE') ?: (env('MYSQLDATABASE') ?: 'supply_chain_risk'),
             'username' => env('DB_USERNAME') ?: (env('MYSQLUSER') ?: 'root'),
             'password' => env('DB_PASSWORD') !== null && env('DB_PASSWORD') !== '' ? env('DB_PASSWORD') : env('MYSQLPASSWORD', ''),

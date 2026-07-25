@@ -1,6 +1,10 @@
 [providers]
 providers = ['php', 'node']
 
+[variables]
+APP_URL = 'http://localhost'
+APP_KEY = 'base64:sxShQ7aMj5IxdBkPuF7OYU7kwe2XFqIoAyz5eo7f6ko='
+
 [phases.setup]
 nixPkgs = [
   'php82',
@@ -17,7 +21,8 @@ nixPkgs = [
 cmds = [
   'composer install --optimize-autoloader --no-dev --no-scripts',
   'npm install',
-  'npm run build'
+  'npm run build',
+  'chmod -R 777 storage bootstrap/cache'
 ]
 
 [start]

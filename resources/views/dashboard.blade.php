@@ -889,17 +889,20 @@
         // 1. GLOBAL COUNTRY DASHBOARD & AJAX FETCH
         async function loadCountryDashboard(code) {
             currentCountryCode = code;
+
+            // Fetch Country Detail
             try {
-                // Fetch Country Detail
                 const resC = await fetch(`/api/countries/${code}`);
                 const dataC = await resC.json();
-                if (dataC.success) {
+                if (dataC.success && dataC.data) {
                     currentCountryData = dataC.data;
-                    document.getElementById('detail-region-lang').innerText = `${currentCountryData.region} | Currency: ${currentCountryData.currency} | Lang: ${currentCountryData.language}`;
+                    document.getElementById('detail-region-lang').innerText = `${currentCountryData.region || '-'} | Currency: ${currentCountryData.currency || '-'} | Lang: ${currentCountryData.language || '-'}`;
                     updateWeatherMapLocation(currentCountryData.latitude, currentCountryData.longitude, currentCountryData.name);
                 }
+            } catch (err) { console.error("Error fetching country detail:", err); }
 
-                // Fetch Economy Data
+            // Fetch Economy Data
+            try {
                 const resE = await fetch(`/api/economy/${code}`);
                 const dataE = await resE.json();
                 if (dataE.success && dataE.economy) {
@@ -909,43 +912,56 @@
                     document.getElementById('dash-population').innerText = eco.population ? Number(eco.population).toLocaleString() : 'N/A';
                     document.getElementById('detail-trade-values').innerText = `Export: ${eco.export ? '$' + Number(eco.export).toLocaleString() : 'N/A'} | Import: ${eco.import ? '$' + Number(eco.import).toLocaleString() : 'N/A'}`;
                 }
+            } catch (err) {
+                console.error("Error fetching economy:", err);
+                document.getElementById('dash-gdp').innerText = 'N/A';
+                document.getElementById('dash-inflation').innerText = 'N/A';
+                document.getElementById('dash-population').innerText = 'N/A';
+            }
 
-                // Fetch Currency Rate
+            // Fetch Currency Rate
+            try {
                 const resCurr = await fetch(`/api/currency/${code}`);
                 const dataCurr = await resCurr.json();
-                if (dataCurr.success) {
+                if (dataCurr.success && dataCurr.currency) {
                     const curr = dataCurr.currency;
-                    document.getElementById('dash-currency').innerText = curr.formatted;
-                    document.getElementById('curr-pair-display').innerText = `USD / ${curr.target}`;
-                    document.getElementById('curr-rate-display').innerText = curr.rate;
-                    document.getElementById('curr-change-display').innerHTML = `<span class="text-muted">Rate Risk Level: </span><strong class="text-warning">${curr.risk}</strong>`;
+                    document.getElementById('dash-currency').innerText = curr.formatted || 'N/A';
+                    if (document.getElementById('curr-pair-display')) document.getElementById('curr-pair-display').innerText = `USD / ${curr.target}`;
+                    if (document.getElementById('curr-rate-display')) document.getElementById('curr-rate-display').innerText = curr.rate;
+                    if (document.getElementById('curr-change-display')) document.getElementById('curr-change-display').innerHTML = `<span class="text-muted">Rate Risk Level: </span><strong class="text-warning">${curr.risk}</strong>`;
                 }
+            } catch (err) {
+                console.error("Error fetching currency:", err);
+                document.getElementById('dash-currency').innerText = 'N/A';
+            }
 
-                // Fetch Weather Data
+            // Fetch Weather Data
+            try {
                 const resW = await fetch(`/api/weather/${code}`);
                 const dataW = await resW.json();
-                if (dataW.success) {
+                if (dataW.success && dataW.weather) {
                     const w = dataW.weather;
                     document.getElementById('dash-weather').innerText = `${w.temperature}°C, ${w.wind_speed}km/h`;
-                    document.getElementById('weather-temp-display').innerText = `${w.temperature} °C`;
-                    document.getElementById('weather-wind-display').innerText = `${w.wind_speed} km/h`;
-                    document.getElementById('weather-risk-display').innerText = w.risk;
+                    if (document.getElementById('weather-temp-display')) document.getElementById('weather-temp-display').innerText = `${w.temperature} °C`;
+                    if (document.getElementById('weather-wind-display')) document.getElementById('weather-wind-display').innerText = `${w.wind_speed} km/h`;
+                    if (document.getElementById('weather-risk-display')) document.getElementById('weather-risk-display').innerText = w.risk;
                 }
+            } catch (err) {
+                console.error("Error fetching weather:", err);
+                document.getElementById('dash-weather').innerText = 'N/A';
+            }
 
-                // Fetch Risk Score
+            // Fetch Risk Score
+            try {
                 const resR = await fetch(`/api/risk/${code}`);
                 const dataR = await resR.json();
-                if (dataR.success) {
-                    const r = dataR.risk;
-                    updateRiskUI(r);
+                if (dataR.success && dataR.risk) {
+                    updateRiskUI(dataR.risk);
                 }
+            } catch (err) { console.error("Error fetching risk:", err); }
 
-                // Fetch News Feed & Sentiment
-                loadNewsFeed(code);
-
-            } catch (err) {
-                console.error("Error loading dashboard data:", err);
-            }
+            // Fetch News Feed & Sentiment
+            loadNewsFeed(code);
         }
 
         function updateRiskUI(r) {

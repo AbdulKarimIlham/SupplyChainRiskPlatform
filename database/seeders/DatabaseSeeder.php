@@ -42,5 +42,12 @@ class DatabaseSeeder extends Seeder
             SentimentSeeder::class,
             PortSeeder::class,
         ]);
+
+        // Auto-generate initial risk scores for all countries
+        try {
+            app(\App\Http\Controllers\API\RiskGeneratorController::class)->generate();
+        } catch (\Throwable $e) {
+            // Log or ignore if background generate fails
+        }
     }
 }

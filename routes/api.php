@@ -25,7 +25,9 @@ Route::get('/countries', [CountryController::class, 'index']);
 Route::get('/countries/{code}', [CountryController::class, 'show']);
 Route::get('/weather/{code}', [WeatherController::class, 'show']);
 Route::get('/economy/{code}', [EconomyController::class, 'show']);
+Route::get('/currency', [CurrencyController::class, 'index']);
 Route::get('/currency/{code}', [CurrencyController::class, 'show']);
+Route::get('/news', [NewsController::class, 'index']);
 Route::get('/news/{code}', [NewsController::class, 'show']);
 
 // Risk Scoring & Intelligence Endpoints

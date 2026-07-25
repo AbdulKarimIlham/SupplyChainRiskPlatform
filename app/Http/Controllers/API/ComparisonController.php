@@ -69,22 +69,22 @@ class ComparisonController extends Controller
                 'language' => $country->language
             ],
             'economic' => [
-                'gdp' => $economic->gdp ?? null,
-                'inflation' => $economic->inflation ?? null,
-                'population' => $economic->population ?? null,
-                'export_value' => $economic->export_value ?? null,
-                'import_value' => $economic->import_value ?? null,
+                'gdp' => $economic?->gdp ?? null,
+                'inflation' => $economic?->inflation ?? null,
+                'population' => $economic?->population ?? null,
+                'export_value' => $economic?->export_value ?? null,
+                'import_value' => $economic?->import_value ?? null,
             ],
             'currency' => [
                 'base' => 'USD',
                 'target' => $country->currency,
-                'rate' => $currency->exchange_rate ?? null,
-                'risk_level' => $currency->risk_level ?? 'Low'
+                'rate' => $currency?->exchange_rate ?? null,
+                'risk_level' => ucfirst($currency?->risk_level ?? 'Low')
             ],
             'weather' => [
-                'temperature' => $weather->temperature ?? null,
-                'wind_speed' => $weather->wind_speed ?? null,
-                'risk_level' => $weather->risk_level ?? 'Low'
+                'temperature' => $weather?->temperature ?? null,
+                'wind_speed' => $weather?->wind_speed ?? null,
+                'risk_level' => ucfirst($weather?->risk_level ?? 'Low')
             ],
             'news_sentiment' => $newsSentimentPct,
             'risk_score' => $calculatedRisk

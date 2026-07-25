@@ -51,84 +51,20 @@ $positive=[
 
 
 
-foreach($positive as $word)
-{
+        foreach ($positive as $word) {
+            PositiveWord::firstOrCreate(['word' => $word]);
+        }
 
-PositiveWord::create([
+        $negative = [
+            'war', 'crisis', 'inflation', 'delay', 'disaster', 'conflict', 'ban', 'banned',
+            'sanction', 'sanctions', 'restriction', 'restrict', 'collapse', 'shortage',
+            'disruption', 'disrupted', 'strike', 'protest', 'blockade', 'tariff', 'trade war',
+            'warning', 'risk', 'failure'
+        ];
 
-'word'=>$word
-
-]);
-
-}
-
-
-
-
-$negative=[
-
-'war',
-
-'crisis',
-
-'inflation',
-
-'delay',
-
-'disaster',
-
-'conflict',
-
-'ban',
-
-'banned',
-
-'sanction',
-
-'sanctions',
-
-'restriction',
-
-'restrict',
-
-'collapse',
-
-'shortage',
-
-'disruption',
-
-'disrupted',
-
-'strike',
-
-'protest',
-
-'blockade',
-
-'tariff',
-
-'trade war',
-
-'warning',
-
-'risk',
-
-'failure'
-
-];
-
-
-
-foreach($negative as $word)
-{
-
-NegativeWord::create([
-
-'word'=>$word
-
-]);
-
-}
+        foreach ($negative as $word) {
+            NegativeWord::firstOrCreate(['word' => $word]);
+        }
 
 
 }

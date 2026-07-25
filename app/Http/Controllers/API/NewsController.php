@@ -10,6 +10,15 @@ use App\Services\SentimentService;
 
 class NewsController extends Controller
 {
+    public function index()
+    {
+        $news = NewsCache::with('country')->latest()->take(50)->get();
+        return response()->json([
+            'success' => true,
+            'data' => $news
+        ]);
+    }
+
     public function show($code, NewsService $newsService, SentimentService $sentimentService)
     {
         $country = Country::where('code', strtoupper($code))->first();

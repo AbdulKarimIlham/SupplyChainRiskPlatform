@@ -686,7 +686,7 @@
 
             <!-- TAB 10: ADMIN DASHBOARD -->
             <div class="tab-pane fade" id="tab-admin">
-                <div class="row g-4">
+                <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="glass-card p-4">
                             <h5 class="fw-bold mb-3"><i class="fa-solid fa-users-gear text-primary me-2"></i>Manajemen User</h5>
@@ -730,6 +730,34 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Admin Port Management Row -->
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="glass-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold m-0"><i class="fa-solid fa-ship text-info me-2"></i>Manajemen Dataset Pelabuhan Global</h5>
+                                <button class="btn btn-sm btn-info text-white rounded-pill" data-bs-toggle="modal" data-bs-target="#addPortModal">+ Pelabuhan Baru</button>
+                            </div>
+                            <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                                <table class="table table-custom align-middle small mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Pelabuhan</th>
+                                            <th>Negara</th>
+                                            <th>Latitude</th>
+                                            <th>Longitude</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-ports-tbody">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -760,6 +788,42 @@
         </div>
     </div>
 
+    <!-- Modal Add Port -->
+    <div class="modal fade" id="addPortModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="fa-solid fa-ship me-2"></i>Tambah Pelabuhan Baru</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-port-form">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Pelabuhan:</label>
+                            <input type="text" class="form-control" id="port-name" required placeholder="e.g. Port of Rotterdam">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Negara:</label>
+                            <input type="text" class="form-control" id="port-country" required placeholder="e.g. Netherlands">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Latitude:</label>
+                                <input type="number" step="any" class="form-control" id="port-lat" required placeholder="51.95">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Longitude:</label>
+                                <input type="number" step="any" class="form-control" id="port-lng" required placeholder="4.15">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-info text-white w-100">Simpan Pelabuhan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         // Global App State
         let currentCountryCode = 'DEU';
@@ -770,6 +834,7 @@
         let currencyChart = null, sentimentChart = null, gdpChart = null, inflationChart = null, riskChart = null;
 
         document.addEventListener("DOMContentLoaded", function () {
+            populateCountryDropdowns();
             loadCountryDashboard(currentCountryCode);
             loadGlobalRanking();
             initPortsMap();
@@ -786,6 +851,40 @@
                 if (portsMap) portsMap.invalidateSize();
             });
         });
+
+        async function populateCountryDropdowns() {
+            try {
+                const res = await fetch('/api/countries');
+                const countries = await res.json();
+                if (Array.isArray(countries) && countries.length > 0) {
+                    const globalSelect = document.getElementById('global-country-select');
+                    const compC1 = document.getElementById('compare-c1');
+                    const compC2 = document.getElementById('compare-c2');
+
+                    let opts = '';
+                    countries.forEach(c => {
+                        opts += `<option value="${c.code}">${c.name} (${c.code})</option>`;
+                    });
+
+                    if (globalSelect) {
+                        const val = globalSelect.value;
+                        globalSelect.innerHTML = opts;
+                        if ([...globalSelect.options].some(o => o.value === val)) globalSelect.value = val;
+                    }
+                    if (compC1) {
+                        compC1.innerHTML = opts;
+                        compC1.value = countries[0].code;
+                    }
+                    if (compC2) {
+                        compC2.innerHTML = opts;
+                        if (countries.length > 1) compC2.value = countries[1].code;
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching countries list:", err);
+            }
+        }
+
 
         // 1. GLOBAL COUNTRY DASHBOARD & AJAX FETCH
         async function loadCountryDashboard(code) {
@@ -806,7 +905,7 @@
                 if (dataE.success && dataE.economy) {
                     const eco = dataE.economy;
                     document.getElementById('dash-gdp').innerText = eco.gdp ? '$' + Number(eco.gdp).toLocaleString() : 'N/A';
-                    document.getElementById('dash-inflation').innerText = eco.inflation ? eco.inflation.toFixed(2) + '%' : 'N/A';
+                    document.getElementById('dash-inflation').innerText = (eco.inflation !== null && eco.inflation !== undefined) ? Number(eco.inflation).toFixed(2) + '%' : 'N/A';
                     document.getElementById('dash-population').innerText = eco.population ? Number(eco.population).toLocaleString() : 'N/A';
                     document.getElementById('detail-trade-values').innerText = `Export: ${eco.export ? '$' + Number(eco.export).toLocaleString() : 'N/A'} | Import: ${eco.import ? '$' + Number(eco.import).toLocaleString() : 'N/A'}`;
                 }
@@ -900,6 +999,10 @@
                 if (data.success) {
                     const tbody = document.querySelector('#global-ranking-table tbody');
                     tbody.innerHTML = '';
+                    const labels = [];
+                    const scores = [];
+                    const infScores = [];
+
                     data.ranking.forEach((item, idx) => {
                         let badgeClass = item.status.includes('High') ? 'badge-risk-high' : (item.status.includes('Medium') ? 'badge-risk-medium' : 'badge-risk-low');
                         tbody.innerHTML += `
@@ -910,12 +1013,28 @@
                                 <td><span class="badge ${badgeClass} px-2 py-1">${item.status}</span></td>
                             </tr>
                         `;
+                        labels.push(item.country);
+                        scores.push(item.score);
+                        infScores.push(item.inflation_risk);
                     });
+
+                    // Update Data Visualization Charts dynamically
+                    if (gdpChart && labels.length > 0) {
+                        gdpChart.data.labels = labels.slice(0, 7);
+                        gdpChart.data.datasets[0].data = scores.slice(0, 7);
+                        gdpChart.update();
+                    }
+                    if (inflationChart && labels.length > 0) {
+                        inflationChart.data.labels = labels.slice(0, 7);
+                        inflationChart.data.datasets[0].data = infScores.slice(0, 7);
+                        inflationChart.update();
+                    }
                 }
             } catch (err) {
                 console.error("Error loading ranking:", err);
             }
         }
+
 
         // 2. NEWS INTELLIGENCE & SENTIMENT ANALYSIS
         async function loadNewsFeed(code) {
@@ -1145,24 +1264,34 @@
                     const row = document.getElementById('comparison-result-row');
                     row.style.display = 'flex';
 
-                    const d1 = data.country1;
-                    const d2 = data.country2;
+                    const renderCountry = (prefix, d) => {
+                        document.getElementById(`${prefix}-title`).innerText = d.info ? d.info.name : 'N/A';
+                        document.getElementById(`${prefix}-gdp`).innerText = (d.economic && d.economic.gdp != null) ? '$' + Number(d.economic.gdp).toLocaleString() : 'N/A';
+                        
+                        const infVal = (d.economic && d.economic.inflation != null) ? Number(d.economic.inflation).toFixed(2) + '%' : 'N/A';
+                        document.getElementById(`${prefix}-inf`).innerText = infVal;
 
-                    document.getElementById('comp-c1-title').innerText = d1.info.name;
-                    document.getElementById('comp-c1-gdp').innerText = d1.economic.gdp ? '$' + Number(d1.economic.gdp).toLocaleString() : 'N/A';
-                    document.getElementById('comp-c1-inf').innerText = d1.economic.inflation ? d1.economic.inflation.toFixed(2) + '%' : 'N/A';
-                    document.getElementById('comp-c1-curr').innerText = `${d1.info.currency} (${d1.currency.rate || 'N/A'}) - Risk: ${d1.currency.risk_level}`;
-                    document.getElementById('comp-c1-weather').innerText = `${d1.weather.temperature || 'N/A'}°C - Wind: ${d1.weather.wind_speed || 'N/A'}km/h`;
-                    document.getElementById('comp-c1-news').innerText = `Pos: ${d1.news_sentiment.positive}%, Neg: ${d1.news_sentiment.negative}%`;
-                    document.getElementById('comp-c1-risk').innerText = `${d1.risk_score.total_score} (${d1.risk_score.status})`;
+                        const currRate = (d.currency && d.currency.rate != null) ? Number(d.currency.rate).toLocaleString() : 'N/A';
+                        const currRisk = (d.currency && d.currency.risk_level) ? d.currency.risk_level : 'Low';
+                        document.getElementById(`${prefix}-curr`).innerText = `${d.info ? d.info.currency : 'N/A'} (${currRate}) - Risk: ${currRisk}`;
 
-                    document.getElementById('comp-c2-title').innerText = d2.info.name;
-                    document.getElementById('comp-c2-gdp').innerText = d2.economic.gdp ? '$' + Number(d2.economic.gdp).toLocaleString() : 'N/A';
-                    document.getElementById('comp-c2-inf').innerText = d2.economic.inflation ? d2.economic.inflation.toFixed(2) + '%' : 'N/A';
-                    document.getElementById('comp-c2-curr').innerText = `${d2.info.currency} (${d2.currency.rate || 'N/A'}) - Risk: ${d2.currency.risk_level}`;
-                    document.getElementById('comp-c2-weather').innerText = `${d2.weather.temperature || 'N/A'}°C - Wind: ${d2.weather.wind_speed || 'N/A'}km/h`;
-                    document.getElementById('comp-c2-news').innerText = `Pos: ${d2.news_sentiment.positive}%, Neg: ${d2.news_sentiment.negative}%`;
-                    document.getElementById('comp-c2-risk').innerText = `${d2.risk_score.total_score} (${d2.risk_score.status})`;
+                        const temp = (d.weather && d.weather.temperature != null) ? `${d.weather.temperature}°C` : 'N/A';
+                        const wind = (d.weather && d.weather.wind_speed != null) ? `${d.weather.wind_speed} km/h` : 'N/A';
+                        document.getElementById(`${prefix}-weather`).innerText = `${temp} - Wind: ${wind}`;
+
+                        const pos = (d.news_sentiment && d.news_sentiment.positive != null) ? d.news_sentiment.positive : 0;
+                        const neg = (d.news_sentiment && d.news_sentiment.negative != null) ? d.news_sentiment.negative : 0;
+                        document.getElementById(`${prefix}-news`).innerText = `Pos: ${pos}%, Neg: ${neg}%`;
+
+                        if (d.risk_score && d.risk_score.total_score != null) {
+                            document.getElementById(`${prefix}-risk`).innerText = `${d.risk_score.total_score} (${d.risk_score.status || 'N/A'})`;
+                        } else {
+                            document.getElementById(`${prefix}-risk`).innerText = 'N/A';
+                        }
+                    };
+
+                    renderCountry('comp-c1', data.country1);
+                    renderCountry('comp-c2', data.country2);
                 }
             } catch (err) {
                 console.error("Comparison error:", err);
@@ -1275,6 +1404,27 @@
                         `;
                     });
                 }
+
+                // Load Ports Dataset
+                const resP = await fetch('/api/ports');
+                const dataP = await resP.json();
+                if (dataP.success) {
+                    const tbodyP = document.getElementById('admin-ports-tbody');
+                    tbodyP.innerHTML = '';
+                    dataP.data.forEach(p => {
+                        tbodyP.innerHTML += `
+                            <tr>
+                                <td><strong class="text-white">${p.name}</strong></td>
+                                <td>${p.country}</td>
+                                <td><code>${p.latitude}</code></td>
+                                <td><code>${p.longitude}</code></td>
+                                <td>
+                                    <button class="btn btn-xs btn-outline-danger py-0" onclick="deletePort(${p.id})">Hapus</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
             } catch (err) {
                 console.error("Admin data error:", err);
             }
@@ -1308,6 +1458,23 @@
             }
         }
 
+        async function deletePort(id) {
+            if (!confirm("Hapus pelabuhan ini?")) return;
+            try {
+                const res = await fetch(`/api/admin/ports/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadAdminData();
+                    initPortsMap();
+                }
+            } catch (err) {
+                console.error("Delete port error:", err);
+            }
+        }
+
         document.getElementById('add-article-form')?.addEventListener('submit', async function(e) {
             e.preventDefault();
             const title = document.getElementById('art-title').value;
@@ -1329,6 +1496,32 @@
                 console.error("Add article error:", err);
             }
         });
+
+        document.getElementById('add-port-form')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('port-name').value;
+            const country = document.getElementById('port-country').value;
+            const latitude = parseFloat(document.getElementById('port-lat').value);
+            const longitude = parseFloat(document.getElementById('port-lng').value);
+
+            try {
+                const res = await fetch('/api/admin/ports', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ name, country, latitude, longitude })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('addPortModal')).hide();
+                    document.getElementById('add-port-form').reset();
+                    loadAdminData();
+                    initPortsMap();
+                }
+            } catch (err) {
+                console.error("Add port error:", err);
+            }
+        });
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

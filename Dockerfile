@@ -23,9 +23,6 @@ WORKDIR /app
 # Copy application source code
 COPY . .
 
-# Set fallback environment variable for build time
-ENV APP_URL=http://localhost
-
 # Install PHP dependencies without running artisan scripts during build
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
@@ -36,5 +33,7 @@ RUN npm run build
 # Ensure storage permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# Start application server
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=$PORT
+# Setup entrypoint script
+RUN chmod +x /app/docker-entrypoint.sh
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

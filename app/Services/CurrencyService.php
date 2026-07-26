@@ -17,7 +17,7 @@ public function getRate(
 {
 
 
-$response = Http::get(
+$response = Http::timeout(3)->get(
 
 "https://open.er-api.com/v6/latest/USD"
 

@@ -17,16 +17,24 @@ class CurrencyController extends Controller
             return response()->json(['message' => 'Country not found'], 404);
         }
 
-        $rate = 0;
-        try {
-            $data = $service->getRate($country->currency);
-            $rate = round($data['rate'] ?? 0, 4);
-        } catch (\Throwable $e) {
-            // Live rate fetch fallback
-        }
+        // 1. Check existing DB cached data first for instant response (<10ms)
+        $dbData = CurrencyRate::where('country_id', $country->id)->latest()->first();
 
-        // DB Fallback
-        $prevRate = CurrencyRate::where('country_id', $country->id)->latest()->first();
+        if ($dbData && $dbData->exchange_rate > 0) {
+            $currCode = $dbData->target_currency ?: ($country->currency ?: 'USD');
+            return response()->json([
+                'success' => true,
+                'country' => $country->name,
+                'currency' => [
+                    'base' => 'USD',
+                    'target' => $currCode,
+                    'rate' => $dbData->exchange_rate,
+                    'change_percentage' => $dbData->change_percentage ?? 0,
+                    'formatted' => $currCode . ' ' . number_format($dbData->exchange_rate, 2, '.', ','),
+                    'risk' => $dbData->risk_level ?? 'Low'
+                ]
+            ]);
+        }
 
         if ($rate <= 0 && $prevRate) {
             $rate = $prevRate->exchange_rate;

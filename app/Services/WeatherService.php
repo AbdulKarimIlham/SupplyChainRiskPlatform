@@ -18,7 +18,7 @@ class WeatherService
     {
 
 
-        $response = Http::get(
+        $response = Http::timeout(3)->get(
 
             'https://api.open-meteo.com/v1/forecast',
 

@@ -19,27 +19,22 @@ class WeatherController extends Controller
             ], 404);
         }
 
-        $current = null;
+        // 1. Check existing DB cached data first for instant response (<10ms)
+        $dbData = WeatherData::where('country_id', $country->id)->latest()->first();
 
-        try {
-            $weather = $service->getWeather($country->latitude, $country->longitude);
-            if (isset($weather['current_weather'])) {
-                $current = $weather['current_weather'];
-            }
-        } catch (\Throwable $e) {
-            // Live weather fetch fallback
-        }
-
-        // DB Fallback if live fetch failed
-        if (!$current) {
-            $dbData = WeatherData::where('country_id', $country->id)->latest()->first();
-            if ($dbData) {
-                $current = [
+        if ($dbData && $dbData->temperature !== null) {
+            return response()->json([
+                'success' => true,
+                'country' => $country->name,
+                'weather' => [
                     'temperature' => $dbData->temperature,
-                    'windspeed' => $dbData->wind_speed,
-                    'weathercode' => 0
-                ];
-            }
+                    'wind_speed' => $dbData->wind_speed,
+                    'weather_code' => 0,
+                    'weather_status' => $dbData->weather_status,
+                    'rain' => $dbData->rain,
+                    'risk' => $dbData->risk_level
+                ]
+            ]);
         }
 
         // Baseline fallback if DB is also empty

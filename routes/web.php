@@ -11,7 +11,7 @@ function ensureDatabaseInitialized() {
         if (!Schema::hasTable('users') || !Schema::hasTable('countries')) {
             Artisan::call('migrate', ['--force' => true]);
         }
-        if (Schema::hasTable('countries') && \App\Models\Country::count() < 100) {
+        if (Schema::hasTable('countries') && \App\Models\Country::count() === 0) {
             Artisan::call('db:seed', ['--force' => true]);
         }
     } catch (\Throwable $e) {

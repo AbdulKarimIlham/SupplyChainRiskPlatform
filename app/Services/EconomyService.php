@@ -27,7 +27,7 @@ class EconomyService
 
 
         $response =
-        Http::get(
+        Http::timeout(3)->get(
 
             $url,
 

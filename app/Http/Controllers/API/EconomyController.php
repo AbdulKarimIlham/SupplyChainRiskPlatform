@@ -19,15 +19,29 @@ class EconomyController extends Controller
             ], 404);
         }
 
-        // 1. Check existing DB cached data first for instant response
+        // 1. Check existing DB cached data first for instant response (<10ms)
         $dbData = EconomicData::where('country_id', $country->id)->latest()->first();
 
+        if ($dbData && $dbData->gdp) {
+            return response()->json([
+                'success' => true,
+                'country' => $country->name,
+                'economy' => [
+                    'gdp' => $dbData->gdp,
+                    'inflation' => $dbData->inflation,
+                    'population' => $dbData->population,
+                    'export' => $dbData->export_value,
+                    'import' => $dbData->import_value,
+                ]
+            ]);
+        }
+
         $economy = [
-            'gdp' => $dbData?->gdp ?? null,
-            'inflation' => $dbData?->inflation ?? null,
-            'population' => $dbData?->population ?? null,
-            'export' => $dbData?->export_value ?? null,
-            'import' => $dbData?->import_value ?? null,
+            'gdp' => null,
+            'inflation' => null,
+            'population' => null,
+            'export' => null,
+            'import' => null,
         ];
 
         // 2. Try live World Bank API if any metric is missing

@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
+    private function checkAdmin()
+    {
+        return Auth::check() && Auth::user()->role === 'admin';
+    }
+
     /*
     |--------------------------------------------------------------------------
     | User Management
@@ -19,6 +24,9 @@ class AdminController extends Controller
     */
     public function users()
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $users = User::all();
         return response()->json([
             'success' => true,
@@ -28,6 +36,9 @@ class AdminController extends Controller
 
     public function updateUserRole(Request $request, $id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $request->validate([
             'role' => 'required|in:user,admin'
         ]);
@@ -49,6 +60,9 @@ class AdminController extends Controller
 
     public function deleteUser($id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $user = User::find($id);
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -73,6 +87,9 @@ class AdminController extends Controller
     */
     public function storePort(Request $request)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $validated = $request->validate([
             'name' => 'required|string',
             'country' => 'required|string',
@@ -91,6 +108,9 @@ class AdminController extends Controller
 
     public function updatePort(Request $request, $id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $port = Port::find($id);
         if (!$port) {
             return response()->json(['message' => 'Port not found'], 404);
@@ -114,6 +134,9 @@ class AdminController extends Controller
 
     public function deletePort($id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $port = Port::find($id);
         if (!$port) {
             return response()->json(['message' => 'Port not found'], 404);
@@ -134,6 +157,9 @@ class AdminController extends Controller
     */
     public function articles()
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $articles = Article::with('user')->latest()->get();
         return response()->json([
             'success' => true,
@@ -143,6 +169,9 @@ class AdminController extends Controller
 
     public function storeArticle(Request $request)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $validated = $request->validate([
             'title' => 'required|string',
             'content' => 'required|string',
@@ -161,6 +190,9 @@ class AdminController extends Controller
 
     public function updateArticle(Request $request, $id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $article = Article::find($id);
         if (!$article) {
             return response()->json(['message' => 'Article not found'], 404);
@@ -182,6 +214,9 @@ class AdminController extends Controller
 
     public function deleteArticle($id)
     {
+        if (!$this->checkAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Admin role required.'], 403);
+        }
         $article = Article::find($id);
         if (!$article) {
             return response()->json(['message' => 'Article not found'], 404);

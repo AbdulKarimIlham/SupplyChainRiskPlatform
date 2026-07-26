@@ -239,9 +239,11 @@
             <li class="nav-item">
                 <button class="nav-link" id="tab-watchlist-btn" data-bs-toggle="pill" data-bs-target="#tab-watchlist"><i class="fa-solid fa-star me-2"></i>Watchlist</button>
             </li>
+            @if(Auth::check() && Auth::user()->role === 'admin')
             <li class="nav-item">
                 <button class="nav-link" id="tab-admin-btn" data-bs-toggle="pill" data-bs-target="#tab-admin"><i class="fa-solid fa-user-shield me-2"></i>Admin Dashboard</button>
             </li>
+            @endif
         </ul>
 
         <!-- Tab Contents -->
@@ -684,6 +686,7 @@
                 </div>
             </div>
 
+            @if(Auth::check() && Auth::user()->role === 'admin')
             <!-- TAB 10: ADMIN DASHBOARD -->
             <div class="tab-pane fade" id="tab-admin">
                 <div class="row g-4 mb-4">
@@ -759,6 +762,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
         </div>
     </div>

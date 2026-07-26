@@ -15,22 +15,29 @@ php artisan route:clear || true
 php artisan view:clear || true
 
 # Wait for database connection if configured
-TARGET_HOST=${DB_HOST:-${MYSQLHOST:-127.0.0.1}}
-TARGET_PORT=${DB_PORT:-${MYSQLPORT:-3306}}
-
-echo "Checking MySQL connection at $TARGET_HOST:$TARGET_PORT..."
+echo "Checking MySQL connection..."
 
 for i in $(seq 1 10); do
     php -r "
     try {
-        \$host = getenv('DB_HOST') ?: (getenv('MYSQLHOST') ?: '127.0.0.1');
-        \$port = getenv('DB_PORT') ?: (getenv('MYSQLPORT') ?: '3306');
-        \$user = getenv('DB_USERNAME') ?: (getenv('MYSQLUSER') ?: 'root');
-        \$pass = getenv('DB_PASSWORD') !== false && getenv('DB_PASSWORD') !== '' ? getenv('DB_PASSWORD') : getenv('MYSQLPASSWORD');
+        \$url = getenv('DB_URL') ?: (getenv('MYSQL_URL') ?: (getenv('MYSQL_PRIVATE_URL') ?: getenv('DATABASE_URL')));
+        if (\$url) {
+            \$p = parse_url(\$url);
+            \$host = \$p['host'] ?? '127.0.0.1';
+            \$port = \$p['port'] ?? '3306';
+            \$user = \$p['user'] ?? 'root';
+            \$pass = \$p['pass'] ?? '';
+        } else {
+            \$host = getenv('DB_HOST') ?: (getenv('MYSQLHOST') ?: (getenv('MYSQL_HOST') ?: (getenv('RAILWAY_PUBLIC_DOMAIN') || getenv('RAILWAY_STATIC_URL') || getenv('RAILWAY_ENVIRONMENT') || isset(\$_SERVER['HTTP_X_RAILWAY_EDGE']) ? 'mysql.railway.internal' : '127.0.0.1')));
+            \$port = getenv('DB_PORT') ?: (getenv('MYSQLPORT') ?: (getenv('MYSQL_PORT') ?: '3306'));
+            \$user = getenv('DB_USERNAME') ?: (getenv('MYSQLUSER') ?: (getenv('MYSQL_USER') ?: 'root'));
+            \$pass = (getenv('DB_PASSWORD') !== false && getenv('DB_PASSWORD') !== '') ? getenv('DB_PASSWORD') : (getenv('MYSQLPASSWORD') ?: (getenv('MYSQL_PASSWORD') ?: ''));
+        }
         \$pdo = new PDO('mysql:host=' . \$host . ';port=' . \$port, \$user, \$pass);
         echo 'MySQL Connected successfully!';
         exit(0);
     } catch (\Throwable \$e) {
+        echo 'MySQL Check error: ' . \$e->getMessage() . PHP_EOL;
         exit(1);
     }
     " && break

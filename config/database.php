@@ -46,9 +46,9 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DB_URL') ?: env('MYSQL_URL'),
+            'url' => env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL'))),
             'host' => (function() {
-                if ($url = env('DB_URL') ?: env('MYSQL_URL')) {
+                if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (!empty($p['host'])) return $p['host'];
                 }
@@ -66,29 +66,29 @@ return [
                 return '127.0.0.1';
             })(),
             'port' => (function() {
-                if ($url = env('DB_URL') ?: env('MYSQL_URL')) {
+                if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (!empty($p['port'])) return $p['port'];
                 }
                 $dbPort = env('DB_PORT');
-                return ($dbPort && $dbPort !== '3306') ? $dbPort : (env('MYSQLPORT') ?: ($dbPort ?: '3306'));
+                return ($dbPort && $dbPort !== '3306') ? $dbPort : (env('MYSQLPORT') ?: (env('MYSQL_PORT') ?: ($dbPort ?: '3306')));
             })(),
             'database' => (function() {
-                if ($url = env('DB_URL') ?: env('MYSQL_URL')) {
+                if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (!empty($p['path'])) return ltrim($p['path'], '/');
                 }
                 return env('DB_DATABASE') ?: (env('MYSQLDATABASE') ?: (env('MYSQL_DATABASE') ?: 'supply_chain_risk'));
             })(),
             'username' => (function() {
-                if ($url = env('DB_URL') ?: env('MYSQL_URL')) {
+                if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (!empty($p['user'])) return $p['user'];
                 }
                 return env('DB_USERNAME') ?: (env('MYSQLUSER') ?: (env('MYSQL_USER') ?: 'root'));
             })(),
             'password' => (function() {
-                if ($url = env('DB_URL') ?: env('MYSQL_URL')) {
+                if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (isset($p['pass'])) return $p['pass'];
                 }

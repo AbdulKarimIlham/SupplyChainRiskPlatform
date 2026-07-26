@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 function ensureDatabaseInitialized() {
     try {
-        if (!Schema::hasTable('countries')) {
+        if (!Schema::hasTable('users') || !Schema::hasTable('countries')) {
             Artisan::call('migrate', ['--force' => true]);
         }
         if (Schema::hasTable('countries') && \App\Models\Country::count() < 100) {

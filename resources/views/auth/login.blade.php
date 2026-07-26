@@ -9,7 +9,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ secure_url('/login') }}">
+    <form method="POST" action="{{ route('login') }}">
         @csrf
 
         <!-- Email Address -->

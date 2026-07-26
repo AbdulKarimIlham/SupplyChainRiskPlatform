@@ -17,29 +17,43 @@ class CurrencyController extends Controller
             return response()->json(['message' => 'Country not found'], 404);
         }
 
-        // Check existing DB cached data first for instant response (<5ms)
+        $targetCurr = strtoupper($country->currency ?: 'USD');
+        $liveData = $service->getRate($targetCurr);
+
         $dbData = CurrencyRate::where('country_id', $country->id)->latest()->first();
 
-        if (!$dbData || $dbData->exchange_rate <= 0) {
-            $currCode = $country->currency ?: 'USD';
-            $defaultRate = 1.0;
-            if ($currCode === 'EUR') $defaultRate = 0.92;
-            elseif ($currCode === 'IDR') $defaultRate = 16200.0;
-            elseif ($currCode === 'CNY') $defaultRate = 7.25;
-            elseif ($currCode === 'JPY') $defaultRate = 155.0;
+        $rate = $liveData['rate'] ?? $dbData?->exchange_rate;
 
+        if ($rate === null || $rate <= 0) {
+            $defaultRates = [
+                'IDR' => 16200.0, 'EUR' => 0.92, 'CNY' => 7.25, 'JPY' => 155.0,
+                'KRW' => 1380.0, 'INR' => 83.5, 'SGD' => 1.35, 'MYR' => 4.70,
+                'THB' => 36.50, 'GBP' => 0.78, 'AUD' => 1.50, 'USD' => 1.0
+            ];
+            $rate = $defaultRates[$targetCurr] ?? 1.0;
+        }
+
+        $risk = $this->calculateRisk(0.15, $targetCurr, $rate);
+
+        if ($dbData) {
+            $dbData->update([
+                'base_currency' => 'USD',
+                'target_currency' => $targetCurr,
+                'exchange_rate' => $rate,
+                'risk_level' => $risk,
+                'date' => date('Y-m-d')
+            ]);
+        } else {
             $dbData = CurrencyRate::create([
                 'country_id' => $country->id,
                 'base_currency' => 'USD',
-                'target_currency' => $currCode,
-                'exchange_rate' => $defaultRate,
-                'change_percentage' => 0.0,
-                'risk_level' => 'Low',
+                'target_currency' => $targetCurr,
+                'exchange_rate' => $rate,
+                'change_percentage' => 0.15,
+                'risk_level' => $risk,
                 'date' => date('Y-m-d')
             ]);
         }
-
-        $targetCurr = $dbData->target_currency ?: ($country->currency ?: 'USD');
 
         return response()->json([
             'success' => true,
@@ -47,10 +61,10 @@ class CurrencyController extends Controller
             'currency' => [
                 'base' => 'USD',
                 'target' => $targetCurr,
-                'rate' => $dbData->exchange_rate,
+                'rate' => $rate,
                 'change_percentage' => $dbData->change_percentage ?? 0,
-                'formatted' => $targetCurr . ' ' . number_format($dbData->exchange_rate, 2, '.', ','),
-                'risk' => $dbData->risk_level ?? 'Low'
+                'formatted' => $targetCurr . ' ' . number_format($rate, 2, '.', ','),
+                'risk' => $risk
             ]
         ]);
     }

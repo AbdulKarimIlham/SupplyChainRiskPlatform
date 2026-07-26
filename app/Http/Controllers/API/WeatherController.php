@@ -19,30 +19,61 @@ class WeatherController extends Controller
             ], 404);
         }
 
-        // Check existing DB cached data first for instant response (<5ms)
+        $lat = $country->latitude ?? -6.2088;
+        $lng = $country->longitude ?? 106.8456;
+
+        $liveResult = $service->getWeather($lat, $lng);
+        $cw = $liveResult['current_weather'] ?? null;
+
         $dbData = WeatherData::where('country_id', $country->id)->latest()->first();
 
-        if (!$dbData || $dbData->temperature === null) {
-            $dbData = WeatherData::create([
-                'country_id' => $country->id,
-                'temperature' => rand(18, 32),
-                'rain' => rand(0, 10),
-                'wind_speed' => rand(5, 20),
-                'weather_status' => 'Berawan / Cloudy',
-                'risk_level' => 'Low'
-            ]);
+        if ($cw) {
+            $temp = round($cw['temperature'] ?? 25, 1);
+            $wind = round($cw['windspeed'] ?? 10, 1);
+            $wcode = (int) ($cw['weathercode'] ?? 0);
+            $status = $this->interpretWeatherCode($wcode);
+            $rain = $this->extractRainEstimate($wcode);
+            $risk = $this->calculateRisk(['windspeed' => $wind, 'weathercode' => $wcode]);
+
+            if ($dbData) {
+                $dbData->update([
+                    'temperature' => $temp,
+                    'rain' => $rain,
+                    'wind_speed' => $wind,
+                    'weather_status' => $status,
+                    'risk_level' => $risk,
+                    'weather_code' => $wcode,
+                ]);
+            } else {
+                $dbData = WeatherData::create([
+                    'country_id' => $country->id,
+                    'temperature' => $temp,
+                    'rain' => $rain,
+                    'wind_speed' => $wind,
+                    'weather_status' => $status,
+                    'risk_level' => $risk,
+                    'weather_code' => $wcode,
+                ]);
+            }
         }
+
+        $temperature = $dbData?->temperature ?? 28;
+        $windSpeed = $dbData?->wind_speed ?? 12;
+        $weatherStatus = $dbData?->weather_status ?? 'Berawan / Cloudy';
+        $rainVal = $dbData?->rain ?? 0.0;
+        $riskVal = $dbData?->risk_level ?? 'Low';
+        $wCodeVal = $dbData?->weather_code ?? 0;
 
         return response()->json([
             'success' => true,
             'country' => $country->name,
             'weather' => [
-                'temperature' => $dbData->temperature,
-                'wind_speed' => $dbData->wind_speed,
-                'weather_code' => 0,
-                'weather_status' => $dbData->weather_status,
-                'rain' => $dbData->rain,
-                'risk' => $dbData->risk_level
+                'temperature' => $temperature,
+                'wind_speed' => $windSpeed,
+                'weather_code' => $wCodeVal,
+                'weather_status' => $weatherStatus,
+                'rain' => $rainVal,
+                'risk' => $riskVal
             ]
         ]);
     }

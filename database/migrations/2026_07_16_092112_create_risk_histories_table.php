@@ -29,6 +29,7 @@ return new class extends Migration
 
             $table->date('date');
 
+            $table->unique(['country_id', 'date']);
 
             $table->timestamps();
 

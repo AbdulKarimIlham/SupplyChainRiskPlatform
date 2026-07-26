@@ -19,4 +19,17 @@ class CountryService
 
         return Country::all();
     }
+
+    public function fetchRestCountry($code)
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)->get("https://restcountries.com/v3.1/alpha/" . strtoupper($code));
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data[0] ?? null;
+            }
+        } catch (\Throwable $e) {}
+
+        return null;
+    }
 }

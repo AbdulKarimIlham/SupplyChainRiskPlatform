@@ -17,7 +17,23 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => (function() {
+        $conn = env('DB_CONNECTION', 'sqlite');
+        if ($conn === 'mysql') {
+            $hasPassword = (env('DB_PASSWORD') !== null && env('DB_PASSWORD') !== '') 
+                || env('MYSQLPASSWORD') 
+                || env('MYSQL_PASSWORD') 
+                || env('DB_URL') 
+                || env('MYSQL_URL') 
+                || env('DATABASE_URL') 
+                || env('MYSQL_PRIVATE_URL');
+            $isRailway = env('RAILWAY_PUBLIC_DOMAIN') || env('RAILWAY_STATIC_URL') || getenv('RAILWAY_ENVIRONMENT') || isset($_SERVER['HTTP_X_RAILWAY_EDGE']);
+            if ($isRailway && !$hasPassword) {
+                return 'sqlite';
+            }
+        }
+        return $conn;
+    })(),
 
     /*
     |--------------------------------------------------------------------------

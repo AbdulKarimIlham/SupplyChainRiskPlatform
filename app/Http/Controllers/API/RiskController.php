@@ -80,6 +80,13 @@ class RiskController extends Controller
 
     public function ranking()
     {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('risk_scores') || RiskScore::count() === 0) {
+                \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            }
+        } catch (\Throwable $e) {}
+
         $ranking = RiskScore::with('country')
             ->orderByDesc('total_score')
             ->get()

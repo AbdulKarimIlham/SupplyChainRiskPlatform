@@ -100,14 +100,14 @@ return [
                     $p = parse_url($url);
                     if (!empty($p['path'])) return ltrim($p['path'], '/');
                 }
-                return env('DB_DATABASE') ?: (env('MYSQLDATABASE') ?: (env('MYSQL_DATABASE') ?: 'supply_chain_risk'));
+                return env('MYSQLDATABASE') ?: (env('MYSQL_DATABASE') ?: (env('DB_DATABASE') ?: 'railway'));
             })(),
             'username' => (function() {
                 if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {
                     $p = parse_url($url);
                     if (!empty($p['user'])) return $p['user'];
                 }
-                return env('DB_USERNAME') ?: (env('MYSQLUSER') ?: (env('MYSQL_USER') ?: 'root'));
+                return env('MYSQLUSER') ?: (env('MYSQL_USER') ?: (env('DB_USERNAME') ?: 'root'));
             })(),
             'password' => (function() {
                 if ($url = env('DB_URL') ?: (env('MYSQL_URL') ?: (env('MYSQL_PRIVATE_URL') ?: env('DATABASE_URL')))) {

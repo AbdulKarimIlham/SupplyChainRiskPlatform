@@ -837,9 +837,10 @@
         let globalPortsData = [];
         let currencyChart = null, sentimentChart = null, gdpChart = null, inflationChart = null, riskChart = null;
 
-        document.addEventListener("DOMContentLoaded", function () {
-            populateCountryDropdowns();
-            loadCountryDashboard(currentCountryCode);
+        document.addEventListener("DOMContentLoaded", async function () {
+            await populateCountryDropdowns();
+            const initialCode = document.getElementById('global-country-select')?.value || currentCountryCode;
+            loadCountryDashboard(initialCode);
             loadGlobalRanking();
             initPortsMap();
             initWeatherMap();

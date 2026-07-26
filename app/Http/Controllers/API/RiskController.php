@@ -85,6 +85,9 @@ class RiskController extends Controller
                 \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
                 \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
             }
+            if (RiskScore::count() === 0) {
+                app(RiskGeneratorController::class)->generate();
+            }
         } catch (\Throwable $e) {}
 
         $ranking = RiskScore::with('country')

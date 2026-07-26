@@ -1579,22 +1579,14 @@ class CountrySeeder extends Seeder
         
 
 
-        foreach($countries as $country)
-        {
+        $now = now();
+        $records = array_map(function ($c) use ($now) {
+            $c['created_at'] = $now;
+            $c['updated_at'] = $now;
+            return $c;
+        }, $countries);
 
-            Country::updateOrCreate(
-
-                [
-                    'code'=>$country['code']
-                ],
-
-                $country
-
-            );
-
-        }
-
-
+        Country::upsert($records, ['code'], ['name', 'region', 'currency', 'language', 'latitude', 'longitude', 'updated_at']);
     }
 
 }

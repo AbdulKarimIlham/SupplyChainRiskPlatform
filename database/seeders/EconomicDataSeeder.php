@@ -11,18 +11,24 @@ class EconomicDataSeeder extends Seeder
     public function run(): void
     {
         $countries = Country::all();
+        $now = now();
+        $records = [];
 
         foreach ($countries as $country) {
-            $inflation = rand(0,10) + rand(0,99)/100; // 0.00 - 10.99%
-            EconomicData::create([
+            $inflation = rand(0, 10) + rand(0, 99) / 100;
+            $records[] = [
                 'country_id' => $country->id,
-                'gdp' => rand(10000,300000), // in million USD
+                'gdp' => rand(150000, 4500000),
                 'inflation' => $inflation,
-                'population' => rand(500000,1400000000),
-                'export_value' => rand(5000,100000),
-                'import_value' => rand(5000,100000),
-                'year' => 2026
-            ]);
+                'population' => rand(5000000, 300000000),
+                'export_value' => rand(25000, 850000),
+                'import_value' => rand(20000, 750000),
+                'year' => 2026,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+
+        EconomicData::insert($records);
     }
 }

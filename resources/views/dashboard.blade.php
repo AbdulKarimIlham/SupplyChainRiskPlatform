@@ -257,16 +257,13 @@
                             <i class="fa-solid fa-globe text-primary fs-3"></i>
                             <div class="flex-grow-1">
                                 <label class="form-label text-muted mb-1 small fw-semibold">PILIH NEGARA MONITORED:</label>
+                                @php
+                                    $allCountries = \App\Models\Country::orderBy('name')->get();
+                                @endphp
                                 <select class="form-select border-0 bg-dark text-white fw-semibold" id="global-country-select" onchange="loadCountryDashboard(this.value)">
-                                    <option value="DEU">Germany (Deutschland)</option>
-                                    <option value="CHN">China (PRC)</option>
-                                    <option value="IDN">Indonesia</option>
-                                    <option value="AUS">Australia</option>
-                                    <option value="USA">United States</option>
-                                    <option value="JPN">Japan</option>
-                                    <option value="SGP">Singapore</option>
-                                    <option value="NLD">Netherlands</option>
-                                    <option value="BRA">Brazil</option>
+                                    @foreach($allCountries as $c)
+                                        <option value="{{ $c->code }}" {{ $c->code === 'DEU' ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <button class="btn btn-outline-warning btn-sm rounded-pill" onclick="toggleWatchlistCurrent()" id="btn-watchlist-toggle">
@@ -603,11 +600,9 @@
                         <div class="col-md-5">
                             <label class="form-label small text-muted">Negara 1:</label>
                             <select class="form-select bg-dark text-white" id="compare-c1">
-                                <option value="DEU">Germany</option>
-                                <option value="CHN">China</option>
-                                <option value="IDN">Indonesia</option>
-                                <option value="AUS">Australia</option>
-                                <option value="USA">United States</option>
+                                @foreach($allCountries as $c)
+                                    <option value="{{ $c->code }}" {{ $c->code === 'DEU' ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-2 text-center pt-md-4">
@@ -616,11 +611,9 @@
                         <div class="col-md-5">
                             <label class="form-label small text-muted">Negara 2:</label>
                             <select class="form-select bg-dark text-white" id="compare-c2">
-                                <option value="AUS" selected>Australia</option>
-                                <option value="DEU">Germany</option>
-                                <option value="CHN">China</option>
-                                <option value="IDN">Indonesia</option>
-                                <option value="USA">United States</option>
+                                @foreach($allCountries as $c)
+                                    <option value="{{ $c->code }}" {{ $c->code === 'IDN' ? 'selected' : '' }}>{{ $c->name }} ({{ $c->code }})</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-12 text-center mt-3">
@@ -829,7 +822,18 @@
 
 
     <script>
-        // Global App State
+        // Global App State & Dynamic Base API URL
+        const API_BASE = (function() {
+            let base = window.location.origin;
+            const path = window.location.pathname;
+            if (path.includes('/public/')) {
+                base += path.substring(0, path.indexOf('/public/') + 8);
+            } else if (path.includes('/index.php')) {
+                base += path.substring(0, path.indexOf('/index.php'));
+            }
+            return base.replace(/\/$/, '') + '/api';
+        })();
+
         let currentCountryCode = 'DEU';
         let currentCountryData = null;
         let weatherMap = null, weatherMarker = null;
@@ -838,28 +842,28 @@
         let currencyChart = null, sentimentChart = null, gdpChart = null, inflationChart = null, riskChart = null;
 
         document.addEventListener("DOMContentLoaded", async function () {
-            await populateCountryDropdowns();
+            try { await populateCountryDropdowns(); } catch (e) { console.error("populateCountryDropdowns error:", e); }
             const initialCode = document.getElementById('global-country-select')?.value || currentCountryCode;
-            loadCountryDashboard(initialCode);
-            loadGlobalRanking();
-            initPortsMap();
-            initWeatherMap();
-            initCharts();
-            loadWatchlistTab();
-            loadAdminData();
+            try { await loadCountryDashboard(initialCode); } catch (e) { console.error("loadCountryDashboard error:", e); }
+            try { await loadGlobalRanking(); } catch (e) { console.error("loadGlobalRanking error:", e); }
+            try { await initPortsMap(); } catch (e) { console.error("initPortsMap error:", e); }
+            try { initWeatherMap(); } catch (e) { console.error("initWeatherMap error:", e); }
+            try { initCharts(); } catch (e) { console.error("initCharts error:", e); }
+            try { loadWatchlistTab(); } catch (e) { console.error("loadWatchlistTab error:", e); }
+            try { loadAdminData(); } catch (e) { console.error("loadAdminData error:", e); }
 
             // Tab listeners for map re-render fixes
-            document.getElementById('tab-weather-btn').addEventListener('shown.bs.tab', function () {
+            document.getElementById('tab-weather-btn')?.addEventListener('shown.bs.tab', function () {
                 if (weatherMap) weatherMap.invalidateSize();
             });
-            document.getElementById('tab-ports-btn').addEventListener('shown.bs.tab', function () {
+            document.getElementById('tab-ports-btn')?.addEventListener('shown.bs.tab', function () {
                 if (portsMap) portsMap.invalidateSize();
             });
         });
 
         async function populateCountryDropdowns() {
             try {
-                const res = await fetch('/api/countries');
+                const res = await fetch(`${API_BASE}/countries`);
                 const countries = await res.json();
                 const dataArr = Array.isArray(countries) ? countries : (countries.data || []);
                 if (Array.isArray(dataArr) && dataArr.length > 0) {
@@ -902,7 +906,7 @@
 
             // Fetch Country Detail
             try {
-                const resC = await fetch(`/api/countries/${code}`);
+                const resC = await fetch(`${API_BASE}/countries/${code}`);
                 const dataC = await resC.json();
                 if (dataC.success && dataC.data) {
                     currentCountryData = dataC.data;
@@ -913,7 +917,7 @@
 
             // Fetch Economy Data
             try {
-                const resE = await fetch(`/api/economy/${code}`);
+                const resE = await fetch(`${API_BASE}/economy/${code}`);
                 const dataE = await resE.json();
                 if (dataE.success && dataE.economy) {
                     const eco = dataE.economy;
@@ -931,7 +935,7 @@
 
             // Fetch Currency Rate
             try {
-                const resCurr = await fetch(`/api/currency/${code}`);
+                const resCurr = await fetch(`${API_BASE}/currency/${code}`);
                 const dataCurr = await resCurr.json();
                 if (dataCurr.success && dataCurr.currency) {
                     const curr = dataCurr.currency;
@@ -947,7 +951,7 @@
 
             // Fetch Weather Data
             try {
-                const resW = await fetch(`/api/weather/${code}`);
+                const resW = await fetch(`${API_BASE}/weather/${code}`);
                 const dataW = await resW.json();
                 if (dataW.success && dataW.weather) {
                     const w = dataW.weather;
@@ -963,7 +967,7 @@
 
             // Fetch Risk Score
             try {
-                const resR = await fetch(`/api/risk/${code}`);
+                const resR = await fetch(`${API_BASE}/risk/${code}`);
                 const dataR = await resR.json();
                 if (dataR.success && dataR.risk) {
                     updateRiskUI(dataR.risk);
@@ -1020,7 +1024,7 @@
 
         async function loadGlobalRanking() {
             try {
-                const res = await fetch('/api/risk-ranking');
+                const res = await fetch(`${API_BASE}/risk-ranking`);
                 const data = await res.json();
                 if (data.success) {
                     const tbody = document.querySelector('#global-ranking-table tbody');
@@ -1067,7 +1071,7 @@
             const container = document.getElementById('news-feed-container');
             container.innerHTML = '<div class="text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin me-2"></i>Loading news sentiment...</div>';
             try {
-                const res = await fetch(`/api/news/${code}`);
+                const res = await fetch(`${API_BASE}/news/${code}`);
                 const data = await res.json();
                 if (data.success) {
                     const s = data.summary;
@@ -1134,7 +1138,7 @@
             portsMarkersGroup = L.layerGroup().addTo(portsMap);
 
             try {
-                const res = await fetch('/api/ports');
+                const res = await fetch(`${API_BASE}/ports`);
                 const data = await res.json();
                 if (data.success) {
                     globalPortsData = data.data;
@@ -1284,7 +1288,7 @@
             const c2 = document.getElementById('compare-c2').value;
 
             try {
-                const res = await fetch(`/api/compare/${c1}/${c2}`);
+                const res = await fetch(`${API_BASE}/compare/${c1}/${c2}`);
                 const data = await res.json();
                 if (data.success) {
                     const row = document.getElementById('comparison-result-row');
@@ -1327,7 +1331,7 @@
         // 6. WATCHLIST & BOOKMARKS
         async function loadWatchlistTab() {
             try {
-                const res = await fetch('/api/watchlists');
+                const res = await fetch(`${API_BASE}/watchlists`);
                 const data = await res.json();
                 if (data.success) {
                     const tbody = document.getElementById('watchlist-tbody');
@@ -1359,7 +1363,7 @@
 
         async function toggleWatchlistCurrent() {
             try {
-                const res = await fetch('/api/watchlists', {
+                const res = await fetch(`${API_BASE}/watchlists`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ code: currentCountryCode })
@@ -1376,7 +1380,7 @@
 
         async function removeFromWatchlist(id) {
             try {
-                const res = await fetch(`/api/watchlists/${id}`, {
+                const res = await fetch(`${API_BASE}/watchlists/${id}`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
@@ -1393,7 +1397,7 @@
         async function loadAdminData() {
             try {
                 // Load Users
-                const resU = await fetch('/api/admin/users');
+                const resU = await fetch(`${API_BASE}/admin/users`);
                 const dataU = await resU.json();
                 if (dataU.success) {
                     const tbodyU = document.getElementById('admin-users-tbody');
@@ -1413,7 +1417,7 @@
                 }
 
                 // Load Articles
-                const resA = await fetch('/api/admin/articles');
+                const resA = await fetch(`${API_BASE}/admin/articles`);
                 const dataA = await resA.json();
                 if (dataA.success) {
                     const tbodyA = document.getElementById('admin-articles-tbody');
@@ -1432,7 +1436,7 @@
                 }
 
                 // Load Ports Dataset
-                const resP = await fetch('/api/ports');
+                const resP = await fetch(`${API_BASE}/ports`);
                 const dataP = await resP.json();
                 if (dataP.success) {
                     const tbodyP = document.getElementById('admin-ports-tbody');
@@ -1458,7 +1462,7 @@
 
         async function toggleUserRole(id, newRole) {
             try {
-                const res = await fetch(`/api/admin/users/${id}/role`, {
+                const res = await fetch(`${API_BASE}/admin/users/${id}/role`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ role: newRole })
@@ -1473,7 +1477,7 @@
         async function deleteArticle(id) {
             if (!confirm("Hapus artikel ini?")) return;
             try {
-                const res = await fetch(`/api/admin/articles/${id}`, {
+                const res = await fetch(`${API_BASE}/admin/articles/${id}`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
@@ -1487,7 +1491,7 @@
         async function deletePort(id) {
             if (!confirm("Hapus pelabuhan ini?")) return;
             try {
-                const res = await fetch(`/api/admin/ports/${id}`, {
+                const res = await fetch(`${API_BASE}/admin/ports/${id}`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
@@ -1507,7 +1511,7 @@
             const content = document.getElementById('art-content').value;
 
             try {
-                const res = await fetch('/api/admin/articles', {
+                const res = await fetch(`${API_BASE}/admin/articles`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ title, content })
@@ -1536,7 +1540,7 @@
             const longitude = parseFloat(document.getElementById('port-lng').value);
 
             try {
-                const res = await fetch('/api/admin/ports', {
+                const res = await fetch(`${API_BASE}/admin/ports`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ name, country, latitude, longitude })
@@ -1555,9 +1559,6 @@
             } catch (err) {
                 console.error("Add port error:", err);
                 alert("Terjadi kesalahan saat menyimpan pelabuhan");
-            }
-        });
-                console.error("Add port error:", err);
             }
         });
 

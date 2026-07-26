@@ -44,21 +44,24 @@ Route::get('/ports/{id}', [PortController::class, 'show']);
 // Country Comparison Engine
 Route::get('/compare/{code1}/{code2}', [ComparisonController::class, 'compare']);
 
-// Watchlist & Bookmarks
-Route::get('/watchlists', [WatchlistController::class, 'index']);
-Route::post('/watchlists', [WatchlistController::class, 'store']);
-Route::delete('/watchlists/{id}', [WatchlistController::class, 'destroy']);
+// Authenticated Web Session Middleware Group
+Route::middleware('web')->group(function () {
+    // Watchlist & Bookmarks
+    Route::get('/watchlists', [WatchlistController::class, 'index']);
+    Route::post('/watchlists', [WatchlistController::class, 'store']);
+    Route::delete('/watchlists/{id}', [WatchlistController::class, 'destroy']);
 
-// Admin Dashboard Endpoints
-Route::get('/admin/users', [AdminController::class, 'users']);
-Route::put('/admin/users/{id}/role', [AdminController::class, 'updateUserRole']);
-Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
+    // Admin Dashboard Endpoints
+    Route::get('/admin/users', [AdminController::class, 'users']);
+    Route::put('/admin/users/{id}/role', [AdminController::class, 'updateUserRole']);
+    Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
 
-Route::post('/admin/ports', [AdminController::class, 'storePort']);
-Route::put('/admin/ports/{id}', [AdminController::class, 'updatePort']);
-Route::delete('/admin/ports/{id}', [AdminController::class, 'deletePort']);
+    Route::post('/admin/ports', [AdminController::class, 'storePort']);
+    Route::put('/admin/ports/{id}', [AdminController::class, 'updatePort']);
+    Route::delete('/admin/ports/{id}', [AdminController::class, 'deletePort']);
 
-Route::get('/admin/articles', [AdminController::class, 'articles']);
-Route::post('/admin/articles', [AdminController::class, 'storeArticle']);
-Route::put('/admin/articles/{id}', [AdminController::class, 'updateArticle']);
-Route::delete('/admin/articles/{id}', [AdminController::class, 'deleteArticle']);
+    Route::get('/admin/articles', [AdminController::class, 'articles']);
+    Route::post('/admin/articles', [AdminController::class, 'storeArticle']);
+    Route::put('/admin/articles/{id}', [AdminController::class, 'updateArticle']);
+    Route::delete('/admin/articles/{id}', [AdminController::class, 'deleteArticle']);
+});

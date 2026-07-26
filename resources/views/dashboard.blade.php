@@ -1513,12 +1513,17 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('addArticleModal')).hide();
+                    const modalEl = document.getElementById('addArticleModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.hide();
                     document.getElementById('add-article-form').reset();
                     loadAdminData();
+                } else {
+                    alert(data.message || "Gagal menyimpan artikel");
                 }
             } catch (err) {
                 console.error("Add article error:", err);
+                alert("Terjadi kesalahan saat menyimpan artikel");
             }
         });
 
@@ -1537,12 +1542,20 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('addPortModal')).hide();
+                    const modalEl = document.getElementById('addPortModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modal.hide();
                     document.getElementById('add-port-form').reset();
                     loadAdminData();
                     initPortsMap();
+                } else {
+                    alert(data.message || "Gagal menyimpan pelabuhan");
                 }
             } catch (err) {
+                console.error("Add port error:", err);
+                alert("Terjadi kesalahan saat menyimpan pelabuhan");
+            }
+        });
                 console.error("Add port error:", err);
             }
         });
